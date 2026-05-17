@@ -28,7 +28,7 @@ pip install -r requirements.txt
 Create `.env`
 
 ```env
-OPENAI_API_KEY=your_key_here
+OPENAI_API_KEY=your_key_here or GROQ_API_KEY=your_key_here
 ```
 
 ## Run notebook
