@@ -1,6 +1,6 @@
 # SpaceX Agent Homework
 
-This project implements an NL-to-SQL + multi-tool SpaceX agent using LangChain and OpenAI.
+This project implements an NL-to-SQL + multi-tool SpaceX agent using LangChain and OpenAI/Groq.
 
 The agent can:
 - Query a SQLite launches database
