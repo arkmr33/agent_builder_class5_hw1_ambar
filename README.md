@@ -1,105 +1,71 @@
-# Agent Builder: NL-to-SQL Pipeline + ReAct Agent
+# SpaceX Agent Homework
 
-Two notebooks. Run them in order. The first builds a fixed pipeline
-that translates English to SQL. The second turns it into a real
-ReAct agent that can choose between two tools.
+This project implements an NL-to-SQL + multi-tool SpaceX agent using LangChain and OpenAI.
 
-## Architecture diagrams
+The agent can:
+- Query a SQLite launches database
+- Look up rocket specifications from JSON
+- Decide dynamically which tool(s) to use
 
-**Class 1 - the pipeline** (`diagrams/pipeline_architecture.drawio.png`)
+---
 
-![Pipeline](diagrams/pipeline_architecture.drawio.png)
+# Setup
 
-**Class 2 - the agent** (`diagrams/agent_architecture.drawio.png`)
-
-![Agent](diagrams/agent_architecture.drawio.png)
-
-Open the `.drawio` files in <https://app.diagrams.net> or the draw.io
-desktop app to edit them.
-
-## Notebooks
-
-| Order | Notebook                | What it teaches                                           |
-|-------|-------------------------|-----------------------------------------------------------|
-| 1     | `nl_sql_pipeline.ipynb` | Fixed pipeline: question -> SQL -> answer. Three prompt versions measured against a test suite. The hard lesson on domain terms. |
-| 2     | `agent.ipynb`           | Same data + a second source. Build a multi-tool ReAct agent by hand. The LLM picks the tool. |
-
-## What's in this repo
-
-```
-nl_sql_pipeline.ipynb    Class 1 - the pipeline
-agent.ipynb              Class 2 - the agent
-spacex_launches.db       SQLite database (18 SpaceX missions) - used by both
-seed.sql                 SQL to recreate the database
-schema.md                schema description for the LLM
-                         (column meanings + allowed values + domain terms + few-shot)
-vehicle_specs.json       rocket specs (thrust, height, reusability...)
-                         used as the agent's second data source
-diagrams/                draw.io source + PNG exports for both architectures
-pyproject.toml           uv project file (so `uv add ...` works)
-README.md                this file
-```
-
-## Setup
-
-You need:
-
-1. **`uv`** to manage Python and packages. Install once:
-   ```bash
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   ```
-   Windows: see <https://docs.astral.sh/uv/getting-started/installation/>.
-
-2. **An OpenAI API key** with at least a few cents of credit. Create
-   one at <https://platform.openai.com/api-keys>. The notebooks prompt
-   for it on first run (the input is hidden as you type).
-
-## Run
+## Install dependencies
 
 ```bash
-git clone https://github.com/fnusatvik07/agentbuilder-class4-nlsql.git
-cd agentbuilder-class4-nlsql
-
-# install jupyter and the LangChain packages (one-time)
-uv add jupyter langchain-openai langchain-core pandas
-
-# class 1 - the pipeline
-uv run jupyter lab nl_sql_pipeline.ipynb
-
-# class 2 - the agent (run this AFTER class 1)
-uv run jupyter lab agent.ipynb
+uv sync
 ```
 
-## What you will learn
-
-### From the pipeline notebook
-- How an LLM uses a schema description to write SQL.
-- Why `schema.md` (for the LLM) is separate from `seed.sql` (for SQLite).
-- How to validate LLM output before executing it.
-- How to build a **test suite** of (question, expected SQL, expected
-  answer) tuples and measure prompt changes against it.
-- The hard lesson: when business vocabulary collides with column
-  values (`heavy launch` vs the literal `'Falcon Heavy'` enum), the
-  LLM will confidently produce the wrong answer unless you write the
-  term down.
-- The limitations of a fixed-order pipeline.
-
-### From the agent notebook
-- Why a fixed pipeline cannot answer multi-source questions.
-- How LangChain's `@tool` decorator and `bind_tools()` work.
-- How to write the **ReAct loop** by hand: Thought -> Action ->
-  Observation -> repeat -> Final Answer.
-- How to read an agent's trace and spot bad tool choices.
-- The new failure modes that come with agents (running in circles,
-  premature termination, hallucinated facts).
-
-## Optional: rebuild the database
+or
 
 ```bash
-rm -f spacex_launches.db
-sqlite3 spacex_launches.db < seed.sql
+pip install -r requirements.txt
 ```
 
-## Questions and feedback
+## Create environment file
 
-Bring them to class. Or open an issue on this repo.
+Create `.env`
+
+```env
+OPENAI_API_KEY=your_key_here
+```
+
+## Run notebook
+
+Open:
+
+```bash
+agent.ipynb
+```
+
+Run all cells.
+
+---
+
+# Files
+
+- `agent.ipynb` — main notebook
+- `spacex_launches.db` — SQLite launch database
+- `vehicle_specs.json` — rocket specs
+- `runs.md` — saved agent traces
+
+---
+
+# What I Learned
+
+## 1. Pipeline vs Agent
+
+The pipeline worked well for simple SQL-only tasks like counting successful launches because the workflow was predictable and reliable. However, the agent performed much better on multi-source questions. For example, when asked about the thrust of the rocket used for crewed missions, the agent first queried the SQL database to identify the rocket and then used the JSON lookup tool to retrieve the thrust. A pipeline could not easily chain these two data sources together dynamically.
+
+## 2. Where the Agent Surprised Me
+
+The most interesting behavior was when the agent recovered from an incorrect assumption. When I asked how many missions flew on reusable rockets, it initially queried a nonexistent `reusable` column and got an SQL error. Instead of failing completely, it reasoned about which vehicles are reusable and retried with a different query. I did not expect the recovery behavior to work that well.
+
+## 3. What I Changed
+
+I kept most of the workbook structure unchanged but experimented with different questions to observe the tool-calling behavior. I also tested ambiguous prompts and failure scenarios to better understand the agent loop. I additionally observed how increasing the number of tools increases the possibility of unnecessary tool calls.
+
+## 4. What I Would Do Differently
+
+Next time, I would add memory and retrieval support so the agent could answer questions across multiple conversations and use unstructured documents. I would also improve SQL validation because the current validator only blocks dangerous keywords and does not fully validate query correctness.
