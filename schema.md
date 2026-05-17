@@ -15,6 +15,7 @@ prevents.
 
 ---
 
+
 ## Database
 
 Single SQLite database with one table named `launches`. Each row is one
