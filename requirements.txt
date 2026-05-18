@@ -1,0 +1,16 @@
+langchain-openai
+langchain-core
+langchain-community
+langchain-groq
+langchain-huggingface
+langgraph
+langchain-mcp-adapters
+chromadb
+pandas
+python-dotenv
+aiosqlite
+requests
+asyncio
+sentence-transformers
+huggingface-hub
+duckduckgo-search
